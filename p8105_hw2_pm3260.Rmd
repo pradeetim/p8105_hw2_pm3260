@@ -1,0 +1,7 @@
+---
+title: "p8105_hw2_pm3260"
+author: "Pradeeti Mainali"
+date: "2024-10-02"
+output: github_document
+---
+
