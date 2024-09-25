@@ -5,3 +5,8 @@ date: "2024-10-02"
 output: github_document
 ---
 
+# Problem 1
+
+# Problem 2
+
+# Problem 3
