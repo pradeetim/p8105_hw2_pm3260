@@ -123,23 +123,39 @@ The total number of cigarette butts collected by Gwynnda in June of 2022 was `r 
 ```{r bakers}
 bakers_df = 
   read.csv("data/gbb_datasets/bakers.csv") |>
-  janitor::clean_names()
-
+  janitor::clean_names() |>
+  mutate(
+    baker = word(baker_name, 1),
+    baker = if_else(
+      baker == "Jo", "Joanne", baker)) |>
+  select(baker, series, baker_age, baker_occupation, hometown) |>
+  arrange(series)
 ```
 
-```{r}
+```{r bakes}
 bakes_df = 
   read.csv("data/gbb_datasets/bakes.csv") |>
-  janitor::clean_names()
+  janitor::clean_names() |>
+  select(baker, series, episode, everything()) |>
+  mutate(baker = if_else(
+    baker == '"Jo"', "Joanne", baker))
+```
+
+```{r results}
+results_df = 
+  read.csv("data/gbb_datasets/results.csv", skip=2) |>
+  janitor::clean_names() |>
+  select(baker, series, episode, everything())
 
 ```
 
-```{r}
-results_df = 
-  read.csv("data/gbb_datasets/results.csv", skip=2) |>
-  janitor::clean_names()
-  
+```{r mering}
+bakes_results_df = 
+ left_join(results_df, bakes_df, by = c("baker", "series", "episode"))
 
+bakeoff_df=
+  left_join(bakes_results_df, bakers_df, by = c("baker", "series")) |>
+  select(baker, series, episode, everything())
 ```
 
 
