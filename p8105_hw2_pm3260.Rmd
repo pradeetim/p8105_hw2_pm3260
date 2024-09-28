@@ -17,12 +17,50 @@ library(haven)
 nyc_df = read_csv("./data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv") |>
   janitor::clean_names() |>
   select(
-    line, station_name, station_latitude, station_longitude, 
+    line, station_name, station_latitude, station_longitude,
     route1, route2, route3, route4, route5, route6, 
     route7, route8, route9, route10, route11, 
-    entrance_type, entry, vending, ada)
+    entrance_type, entry, vending, ada) |>
+  mutate(entry_logical = ifelse(entry == "YES", TRUE, FALSE))
 ```
 
+The NYC Transit data frame contains the variables that describe routes, entry and entrance type, ADA compliance, station name/latitude/longitude, lines, and vending. 
+
+So far, I have cleaned the names to make them all lower case and selected the variables above to remain in the data set.
+
+The dimensions of this data set is 1868 rows and 20 columns. The data is NOT tidy. 
+
+```{r stations, echo=FALSE, results='hide'}
+distinct_stations = nyc_df |>
+  distinct(station_name, line) |>
+  nrow()
+
+distinct_stations
+```
+
+There are 465 distinct stations. 
+
+```{r ada, echo=FALSE, results='hide'}
+ada_compliant = nyc_df |>
+  filter(ada == TRUE) |>
+  distinct(station_name, line) |>
+  nrow()
+
+ada_compliant
+```
+
+There are 84 ADA compliant stations.
+
+```{r vending, echo=FALSE, results='hide'}
+no_vending <- nyc_df |>
+  filter(vending == "NO") |>
+  summarise(proportion = mean(entry_logical, na.rm = TRUE)) |>
+  pull(proportion)
+
+no_vending
+```
+
+37% of stations
 # Problem 2
 
 # Problem 3
