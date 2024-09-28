@@ -8,7 +8,7 @@ output: github_document
 ```{r setup, echo=FALSE, message=FALSE}
 library(tidyverse)
 library(readxl)
-library(haven)
+library(tidyr)
 ```
 
 # Problem 1
@@ -60,7 +60,55 @@ no_vending <- nyc_df |>
 no_vending
 ```
 
-37% of stations
+37% of station entrances/exits without vending allow entrance.
+
+```{r}
+```
+
 # Problem 2
+
+```{r mrtrash}
+mrtrash_df = 
+  read_excel("./data/202309 Trash Wheel Collection Data.xlsx", 
+    range="A2:N587", 
+    sheet = "Mr. Trash Wheel") |>
+  janitor::clean_names() |>
+  drop_na(dumpster) |>
+  mutate(
+    sports_balls = as.integer(
+      round(sports_balls, 0)),
+    year = as.numeric(year),
+    trash_wheel = "Mr. Trash Wheel")
+```
+
+
+```{r proftrash}
+proftrash_df = 
+  read_excel("./data/202309 Trash Wheel Collection Data.xlsx", 
+    range="A2:M109", 
+    sheet = "Professor Trash Wheel") |>
+  janitor::clean_names() |>
+  drop_na(dumpster) |>
+  mutate(trash_wheel = "Professor Trash Wheel")
+
+
+```
+
+```{r gwyntrash}
+gwyntrash_df = 
+  read_excel("./data/202309 Trash Wheel Collection Data.xlsx", 
+    range="A2:L159", 
+    sheet = "Gwynnda Trash Wheel") |>
+  janitor::clean_names() |>
+  drop_na(dumpster) |>
+  mutate(trash_wheel = "Gwynnda Trash Wheel")
+
+```
+
+```{r}
+trash_df =
+  bind_rows(mrtrash_df, proftrash_df, gwyntrash_df)
+```
+
 
 # Problem 3
