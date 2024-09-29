@@ -206,7 +206,7 @@ table_df = bakeoff_df |>
     series >= 5) |>
   select(series, episode, baker, result) |>
   arrange(series, episode) |>
-  knitr::kable(caption = "GBBO Star Bakers and Winners")
+  knitr::kable()
 
 table_df
 ```
@@ -215,4 +215,26 @@ table_df
 
 Looking at the table, we can see that most of the winners had gotten star baker earlier in the season at  least once. The number of times you got star bakers doesn't seem to matter as winners ranged from being the star baker from as low as 1 time to as high as 3 times per their season. However, in Season 10, the winner was David, who has not won star baker even once during the season, which seems like a surprise. 
 
+```{r viewers}
+viewers_df = 
+  read.csv("data/gbb_datasets/viewers.csv") |>
+  janitor::clean_names() |>
+  pivot_longer(
+    cols = series_1:series_10,
+    names_to = "series",
+    values_to = "viewership",
+    names_prefix = "series_") |>
+  mutate(series = as.numeric(series)) |>
+  select(series, episode, viewership) |>
+  arrange(series, episode) |>
+  drop_na(viewership) 
+
+viewers_tbl = viewers_df |>
+  head(10) |>
+  knitr::kable()
+
+viewers_tbl
+```
+
+The average viewership in Season 1 was `r mean(pull(filter(viewers_df, series == 1), viewership))` million, and the average viewership in Season 5 was `r mean(pull(filter(viewers_df, series == 5), viewership))` million.
 
