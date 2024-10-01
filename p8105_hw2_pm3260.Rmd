@@ -14,25 +14,34 @@ library(knitr)
 
 # Problem 1
 
-```{r nyctransit}
-nyc_df = read_csv("./data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv") |>
+### Importing transit data:
+
+```{r nyctransit, results='hide'}
+nyc_df = 
+  read_csv("./data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv") |>
   janitor::clean_names() |>
   select(
-    line, station_name, station_latitude, station_longitude,
-    route1, route2, route3, route4, route5, route6, 
-    route7, route8, route9, route10, route11, 
-    entrance_type, entry, vending, ada) |>
-  mutate(entry_logical = ifelse(entry == "YES", TRUE, FALSE))
+    line, station_name, station_latitude, 
+    station_longitude, starts_with("route"), 
+    entrance_type, entry, vending, ada
+    ) |>
+  mutate(
+    across(
+      c(route8, route9, route10, route11), as.character),
+    entry_logical = ifelse(entry == "YES", TRUE, FALSE))
 ```
 
 The NYC Transit data frame contains the variables that describe routes, entry and entrance type, ADA compliance, station name/latitude/longitude, lines, and vending. 
 
 So far, I have cleaned the names to make them all lower case and selected the variables above to remain in the data set.
 
-The dimensions of this data set is 1868 rows and 20 columns. The data is NOT tidy. 
+The dimensions of this data set is `r nrow(nyc_df)` rows and `r ncol(nyc_df)` columns. The data is NOT tidy. 
 
-```{r stations, echo=FALSE, results='hide'}
-distinct_stations = nyc_df |>
+### Finding distinct stations:
+
+```{r stations, results='hide'}
+distinct_stations = 
+  nyc_df |>
   distinct(station_name, line) |>
   nrow()
 
@@ -41,8 +50,11 @@ distinct_stations
 
 There are 465 distinct stations. 
 
-```{r ada, echo=FALSE, results='hide'}
-ada_compliant = nyc_df |>
+### Finding number of ADA compliant stations:
+
+```{r ada, results='hide'}
+ada_compliant = 
+  nyc_df |>
   filter(ada == TRUE) |>
   distinct(station_name, line) |>
   nrow()
@@ -52,10 +64,14 @@ ada_compliant
 
 There are 84 ADA compliant stations.
 
-```{r vending, echo=FALSE, results='hide'}
-no_vending <- nyc_df |>
+### Proportion of vending 
+
+```{r vending, results='hide'}
+no_vending = 
+  nyc_df |>
   filter(vending == "NO") |>
-  summarise(proportion = mean(entry_logical, na.rm = TRUE)) |>
+  summarise(
+    proportion = mean(entry_logical, na.rm = TRUE)) |>
   pull(proportion)
 
 no_vending
@@ -63,20 +79,45 @@ no_vending
 
 37% of station entrances/exits without vending allow entrance.
 
-```{r}
+### Reformatting data:
+
+```{r reformat, results='hide'}
+nyc_df |> 
+  pivot_longer(
+    route1:route11,
+    names_to = "route_num",
+    values_to = "route") |> 
+  filter(route == "A") |> 
+  select(station_name, line) |> 
+  distinct()
 ```
+
+There are 60 distinct stations that serve the A train. 
+
+```{r pivot, results='hide'}
+nyc_df |> 
+  pivot_longer(
+    route1:route11,
+    names_to = "route_num",
+    values_to = "route") |> 
+  filter(route == "A", ada == TRUE) |> 
+  select(station_name, line) |> 
+  distinct()
+```
+
+Of the station that serve the A train, 17 are the ADA compliant.
 
 # Problem 2
 
 ### Importing Mr. Trash Wheel Data
 
-```{r mrtrash}
+```{r mrtrash, results='hide'}
 mrtrash_df = 
-  read_excel("./data/202309 Trash Wheel Collection Data.xlsx", 
-    range="A2:N587", 
+  read_excel("./data/202409 Trash Wheel Collection Data.xlsx", 
     sheet = "Mr. Trash Wheel") |>
   janitor::clean_names() |>
   drop_na(dumpster) |>
+  select(where(~ !all(is.na(.)))) |>
   mutate(
     sports_balls = as.integer(
       round(sports_balls, 0)),
@@ -88,22 +129,18 @@ mrtrash_df =
 
 ```{r proftrash}
 proftrash_df = 
-  read_excel("./data/202309 Trash Wheel Collection Data.xlsx", 
-    range="A2:M109", 
+  read_excel("./data/202409 Trash Wheel Collection Data.xlsx", 
     sheet = "Professor Trash Wheel") |>
   janitor::clean_names() |>
   drop_na(dumpster) |>
   mutate(trash_wheel = "Professor Trash Wheel")
-
-
 ```
 
 ### Importing Gwynnda Trash Wheel Data
 
 ```{r gwyntrash}
 gwyntrash_df = 
-  read_excel("./data/202309 Trash Wheel Collection Data.xlsx", 
-    range="A2:L159", 
+  read_excel("./data/202409 Trash Wheel Collection Data.xlsx", 
     sheet = "Gwynnda Trash Wheel") |>
   janitor::clean_names() |>
   drop_na(dumpster) |>
@@ -122,7 +159,7 @@ trash_df =
 
 The three data sets are from different sheets of the same excel file. They were imported so that the rows and columns all had data and then merged. Before the merge, a new variable to indicate which sheet they came from was added. 
 
-After the merge in `trash_df`, there were 845 observations and 15 variables (`r paste(names(trash_df), collapse = ", ")`). 
+After the merge in `trash_df`, there were `r nrow(trash_df)` observations and `r ncol(trash_df)` variables (`r paste(names(trash_df), collapse = ", ")`). 
 
 The total weight of trash collected by Professor Trash Wheel was `r sum(pull(filter(trash_df, trash_wheel == "Professor Trash Wheel"), weight_tons), na.rm = TRUE)` tons. 
 
@@ -214,6 +251,9 @@ table_df
 ### Comments:
 
 Looking at the table, we can see that most of the winners had gotten star baker earlier in the season at  least once. The number of times you got star bakers doesn't seem to matter as winners ranged from being the star baker from as low as 1 time to as high as 3 times per their season. However, in Season 10, the winner was David, who has not won star baker even once during the season, which seems like a surprise. 
+
+
+### Importing the viewership data:
 
 ```{r viewers}
 viewers_df = 
